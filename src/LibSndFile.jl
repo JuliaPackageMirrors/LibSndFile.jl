@@ -121,7 +121,7 @@ function SndFileSource(path, filePtr, sfinfo, bufsize=4096)
     readbuf = Array(T, sfinfo.channels, bufsize)
     transbuf = Array(T, bufsize, sfinfo.channels)
 
-    SndFileSource(path, filePtr, sfinfo, 1, readbuf, transbuf)
+    SndFileSource(path, filePtr, sfinfo, Int64(1), readbuf, transbuf)
 end
 
 nchannels(source::SndFileSource) = Int(source.sfinfo.channels)
