@@ -1,17 +1,24 @@
 #!/usr/bin/env julia
 
+println("Starting tests...")
 if VERSION >= v"0.5.0-"
     using Base.Test
 else
     using BaseTestNext
 end
 
+println("importing modules...")
+
 using LibSndFile
 using SampledSignals
 using FileIO
 using FixedPointNumbers
 
+println("modules imported, including testhelpers...")
+
 include("testhelpers.jl")
+
+printlin("testhelpers included, defining other helpers...")
 
 """Generates a 100-sample 2-channel signal"""
 function gen_reference(srate)
@@ -33,6 +40,8 @@ function Base.redirect_stderr(f::Function)
     end
 end
 
+println("helpers imported, starting tests for real...")
+
 try
     @testset "LibSndFile Tests" begin
         srate = 44100Hz
@@ -46,11 +55,15 @@ try
         reference_flac = Pkg.dir("LibSndFile", "test", "440left_880right_0.5amp.flac")
         reference_buf = gen_reference(srate/Hz)
 
+        println(1)
+
         @testset "Read errors" begin
             redirect_stderr() do rd, wr
                 @test_throws ErrorException load("doesnotexist.wav")
             end
         end
+
+        println(2)
 
         @testset "WAV file detection" begin
             open(reference_wav) do stream
@@ -60,6 +73,9 @@ try
                 @test !LibSndFile.detectwav(stream)
             end
         end
+
+        println(3)
+
         @testset "WAV file reading" begin
             buf = load(reference_wav)
             @test samplerate(buf) == srate
@@ -68,6 +84,8 @@ try
             @test isapprox(Float64[x/s for x in domain(buf)], collect(0:99)/(srate/Hz))
             @test mse(buf, reference_buf) < 1e-10
         end
+
+        println(4)
 
         @testset "Reading different sample types" begin
             buf = load(reference_wav)
@@ -86,6 +104,8 @@ try
             @test mse(buf_pcm24, reference_buf) < 1e-10
         end
 
+        println(5)
+
         @testset "FLAC file reading" begin
             buf = load(reference_flac)
             @test samplerate(buf) == srate
@@ -94,6 +114,7 @@ try
             @test isapprox(Float64[x/s for x in domain(buf)], collect(0:99)/(srate/Hz))
             @test mse(buf, reference_buf) < 1e-10
         end
+        println(6)
 
         @testset "OGG file reading" begin
             buf = load(reference_ogg)
@@ -104,6 +125,8 @@ try
             # lossy compression, so relax the accuracy a bit
             @test mse(buf, reference_buf) < 1e-5
         end
+
+        println(7)
 
         @testset "Streaming reading" begin
             str = loadstream(reference_wav)
@@ -118,6 +141,8 @@ try
             end
         end
 
+        println(8)
+
         @testset "WAV file writing" begin
             fname = string(tempname(), ".wav")
             testbuf = SampleBuf(rand(100, 2)-0.5, srate)
@@ -130,6 +155,8 @@ try
             @test isapprox(Float64[x/s for x in domain(buf)], collect(0:99)/(srate/Hz))
             @test mse(buf, testbuf) < 1e-10
         end
+
+        println(9)
 
         @testset "OGG file writing" begin
             fname = string(tempname(), ".ogg")
@@ -144,6 +171,8 @@ try
             # noise doesn't compress very well...
             @test mse(buf, testbuf) < 0.05
         end
+
+        println(10)
 
         @testset "FLAC file writing" begin
             fname = string(tempname(), ".flac")
@@ -160,6 +189,8 @@ try
             @test mse(buf, testbuf) < 1e-10
         end
 
+        println(11)
+
         @testset "Writing $T data" for T in [Fixed{Int16, 15}, Fixed{Int32, 31}, Float32, Float64]
             fname = string(tempname(), ".wav")
             arr = convert(Array{T}, rand(100, 2)-0.5)
@@ -170,6 +201,8 @@ try
             @test mse(buf, testbuf) < 1e-10
         end
 
+        println(12)
+
         @testset "Write errors" begin
             testbuf = SampleBuf(rand(Float32, 100, 2)-0.5, srate)
             flacname = string(tempname(), ".flac")
@@ -178,6 +211,8 @@ try
                 @test_throws ErrorException save(flacname, testbuf)
             end
         end
+
+        println(13)
 
         @testset "Streaming writing" begin
             fname = string(tempname(), ".wav")
@@ -203,6 +238,8 @@ try
 
         end
 
+        println(14)
+
         @testset "Sink Display" begin
             fname = string(tempname(), ".wav")
             testbuf = SampleBuf(rand(Float32, 10000, 2)-0.5, srate)
@@ -227,6 +264,8 @@ try
               position: 10000 of 10000 frames
                         0.23 of 0.23 seconds"""
         end
+
+        println(15)
 
         @testset "Source Display" begin
             fname = string(tempname(), ".wav")
