@@ -18,7 +18,7 @@ println("modules imported, including testhelpers...")
 
 include("testhelpers.jl")
 
-printlin("testhelpers included, defining other helpers...")
+println("testhelpers included, defining other helpers...")
 
 """Generates a 100-sample 2-channel signal"""
 function gen_reference(srate)
