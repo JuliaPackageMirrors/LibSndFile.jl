@@ -58,9 +58,7 @@ try
         println(1)
 
         @testset "Read errors" begin
-            redirect_stderr() do rd, wr
-                @test_throws ErrorException load("doesnotexist.wav")
-            end
+            @test_throws ErrorException load("doesnotexist.wav")
         end
 
         println(2)
