@@ -29,14 +29,21 @@ function gen_reference(srate)
 end
 
 function Base.redirect_stderr(f::Function)
+    println("redirecting stderr")
     STDERR_orig = STDERR
     (rd, rw) = redirect_stderr()
     try
+        println("about to run wrapped function")
         f(rd, rw)
+        println("ran wrapped function")
     finally
+        println("trying to close rw stream")
         close(rw) # makes sure all writes are flushed
+        println("closed rw stream closing rd stream")
         close(rd)
+        println("closed rd stream, redirecting back")
         redirect_stderr(STDERR_orig)
+        println("DONE!")
     end
 end
 
@@ -60,6 +67,7 @@ try
         @testset "Read errors" begin
             redirect_stderr() do rd, wr
                 @test_throws ErrorException load("doesnotexist.wav")
+                println("finished test part")
             end
         end
 
