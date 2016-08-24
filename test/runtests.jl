@@ -1,24 +1,20 @@
 #!/usr/bin/env julia
 
-println("Starting tests...")
 if VERSION >= v"0.5.0-"
     using Base.Test
 else
     using BaseTestNext
 end
 
-println("importing modules...")
 
 using LibSndFile
 using SampledSignals
 using FileIO
 using FixedPointNumbers
 
-println("modules imported, including testhelpers...")
 
 include("testhelpers.jl")
 
-println("testhelpers included, defining other helpers...")
 
 """Generates a 100-sample 2-channel signal"""
 function gen_reference(srate)
@@ -27,27 +23,6 @@ function gen_reference(srate)
 
     0.5sin(phase)
 end
-
-function Base.redirect_stderr(f::Function)
-    println("redirecting stderr")
-    STDERR_orig = STDERR
-    (rd, rw) = redirect_stderr()
-    try
-        println("about to run wrapped function")
-        f(rd, rw)
-        println("ran wrapped function")
-    finally
-        println("trying to close rw stream")
-        close(rw) # makes sure all writes are flushed
-        println("closed rw stream closing rd stream")
-        close(rd)
-        println("closed rd stream, redirecting back")
-        redirect_stderr(STDERR_orig)
-        println("DONE!")
-    end
-end
-
-println("helpers imported, starting tests for real...")
 
 try
     @testset "LibSndFile Tests" begin
@@ -65,10 +40,7 @@ try
         println(1)
 
         @testset "Read errors" begin
-            redirect_stderr() do rd, wr
-                @test_throws ErrorException load("doesnotexist.wav")
-                println("finished test part")
-            end
+            @test_throws ErrorException load("doesnotexist.wav")
         end
 
         println(2)
@@ -214,10 +186,8 @@ try
         @testset "Write errors" begin
             testbuf = SampleBuf(rand(Float32, 100, 2)-0.5, srate)
             flacname = string(tempname(), ".flac")
-            redirect_stderr() do rd, wr
-                @test_throws ErrorException save(abspath(joinpath("does", "not", "exist.wav")), testbuf)
-                @test_throws ErrorException save(flacname, testbuf)
-            end
+            @test_throws ErrorException save(abspath(joinpath("does", "not", "exist.wav")), testbuf)
+            @test_throws ErrorException save(flacname, testbuf)
         end
 
         println(13)
@@ -355,6 +325,21 @@ try
         #         @fact buf[1:bufsize] => mse(expected[bufsize+1:2*bufsize])
         #     end
         # end
+    end
+
+    println("testing redirection")
+    STDERR_orig = STDERR
+    (rd, rw) = redirect_stderr()
+    try
+        error("some bad stuff happened")
+    finally
+        println("closing wr")
+        close(wr) # makes sure all writes are flushed
+        println("closing rd")
+        close(rd)
+        println("restoring stderr")
+        redirect_stderr(STDERR_orig)
+        println("finished")
     end
 catch err
     exit(-1)
